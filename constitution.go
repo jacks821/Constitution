@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+	"github.com/PuerkitoBio/goquery"
 )
 
 
@@ -51,7 +52,7 @@ func RemoveWhitespace(text string) string {
 	return regex.ReplaceAllString(text, " ")
 }
 
-func Tweet(tweet string) {
+func Tweet(status string) {
 	TWITTER_CONSUMER_KEY := 	os.Getenv("TWITTER_CONSUMER_KEY")
 	TWITTER_CONSUMER_SECRET := 	os.Getenv("TWITTER_CONSUMER_SECRET")
 	TWITTER_ACCESS_TOKEN := 	os.Getenv("TWITTER_ACCESS_TOKEN")
@@ -62,9 +63,9 @@ func Tweet(tweet string) {
 
 	httpClient := config.Client(oauth1.NoContext, token)
 
-	body := strings.NewReader(tweet)
+	body := strings.NewReader(status)
 	tweet := url.Values{}
-	tweet.Add("status", tweet)
+	tweet.Add("status", status)
 	
 	updatePath := "https://api.twitter.com/1.1/statuses/update.json?"
 
@@ -83,19 +84,62 @@ func Tweet(tweet string) {
 	fmt.Printf("read resp.Body successfully:\n%v\n", string(data))
 }
 
+func File() {
+	files := []string{"usconstitution.txt", "declaration.txt", "washington.txt"}
+		for _, file := range files {
+			whole := RemoveWhitespace(GrabLines(file))
+			tweets := MakeTweets(whole)
+			for _, tweet := range tweets {
+				fmt.Printf("%v\n %v --------------\n", tweet, len(tweet))
+				time.Sleep(1 * time.Minute)
+			}
+		}
+}
+
+func federalist2(path string) {
+	var buffer bytes.Buffer
+	doc, err := goquery.NewDocument(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	doc.Find("p").Each(func(index int, item *goquery.Selection) {
+		text := item.Text()
+		buffer.WriteString(text)
+	})	
+	buffer.String()
+}
+
+	
 
 
+func getFederalist(num int) string {
+	var path string
+	var buffer bytes.Buffer
+	basePath := "http://www.foundingfathers.info/federalistpapers/"
+	if num < 10 {
+		path = fmt.Sprintf("%vfed0%v.htm", basePath, num)
+	} else {
+		path = fmt.Sprintf("%vfed%v.htm", basePath, num)
+	}
+	doc, err := goquery.NewDocument(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	doc.Find("p").Each(func(index int, item *goquery.Selection) {
+		text := item.Text()
+		buffer.WriteString(text)
+	})	
+	return buffer.String()
+}
 
 
 
 func main() {
-	files := []string{"usconstitution.txt", "declaration.txt", "washington.txt"}
-	for _, file := range files {
-		whole := RemoveWhitespace(GrabLines(file))
-		tweets := MakeTweets(whole)
-		for _, tweet := range tweets {
-			fmt.Printf("%v\n %v --------------\n", tweet, len(tweet))
-			time.Sleep(15 * time.Second)
+	for i := 1; i < 85; i++ {
+		federalist := RemoveWhitespace(getFederalist(i))
+		federalistTweets := MakeTweets(federalist)
+		for _, tweet := range federalistTweets {
+			fmt.Printf("%s\n%v\n_________________\n", tweet, len(tweet))
 		}
 	}
 }
