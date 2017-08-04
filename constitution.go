@@ -62,8 +62,7 @@ func Tweet(status string) {
 	token := oauth1.NewToken(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET)	
 
 	httpClient := config.Client(oauth1.NoContext, token)
-	toPotus := fmt.Sprintf("%s %s", "@POTUS", status)
-	body := strings.NewReader(toPotus)
+	body := strings.NewReader(status)
 	tweet := url.Values{}
 	tweet.Add("status", status)
 	
@@ -135,12 +134,14 @@ func getFederalist(num int) string {
 
 
 func main() {
+	prefix := "@POTUS "
 	files := []string{"declaration.txt", "washington.txt", "usconstitution.txt"}
 	for _, file := range files {
 		whole := RemoveWhitespace(GrabLines(file))
 			tweets := MakeTweets(whole)
 			for _, tweet := range tweets {
-				Tweet(tweet)
+				status := fmt.Sprintf("%s %s", prefix, tweet)
+				Tweet(status)
 				time.Sleep(5 * time.Minute)
 		}
 	}
@@ -148,7 +149,8 @@ func main() {
 		federalist := RemoveWhitespace(getFederalist(i))
 		federalistTweets := MakeTweets(federalist)
 		for _, tweet := range federalistTweets {
-			Tweet(tweet)
+			status := fmt.Sprintf("%s %s", prefix, tweet)
+			Tweet(status)
 			time.Sleep(5 * time.Minute)
 		}
 	}
