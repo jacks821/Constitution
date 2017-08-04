@@ -62,7 +62,7 @@ func Tweet(status string) {
 	token := oauth1.NewToken(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET)	
 
 	httpClient := config.Client(oauth1.NoContext, token)
-	toPotus = fmt.Sprintf("%s %s", "@POTUS", status)
+	toPotus := fmt.Sprintf("%s %s", "@POTUS", status)
 	body := strings.NewReader(toPotus)
 	tweet := url.Values{}
 	tweet.Add("status", status)
