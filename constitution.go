@@ -62,8 +62,8 @@ func Tweet(status string) {
 	token := oauth1.NewToken(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET)	
 
 	httpClient := config.Client(oauth1.NoContext, token)
-
-	body := strings.NewReader(status)
+	toPotus = fmt.Sprintf("%s %s", "@POTUS", status)
+	body := strings.NewReader(toPotus)
 	tweet := url.Values{}
 	tweet.Add("status", status)
 	
@@ -96,7 +96,7 @@ func File() {
 		}
 }
 
-func federalist2(path string) {
+func federalist(path string) {
 	var buffer bytes.Buffer
 	doc, err := goquery.NewDocument(path)
 	if err != nil {
@@ -135,11 +135,21 @@ func getFederalist(num int) string {
 
 
 func main() {
-	for i := 1; i < 85; i++ {
+	files := []string{"declaration.txt", "washington.txt", "usconstitution.txt"}
+	for _, file := range files {
+		whole := RemoveWhitespace(GrabLines(file))
+			tweets := MakeTweets(whole)
+			for _, tweet := range tweets {
+				Tweet(tweet)
+				time.Sleep(5 * time.Minute)
+		}
+	}
+	for i := 1; i <= 85; i++ {
 		federalist := RemoveWhitespace(getFederalist(i))
 		federalistTweets := MakeTweets(federalist)
 		for _, tweet := range federalistTweets {
-			fmt.Printf("%s\n%v\n_________________\n", tweet, len(tweet))
+			Tweet(tweet)
+			time.Sleep(5 * time.Minute)
 		}
 	}
 }
